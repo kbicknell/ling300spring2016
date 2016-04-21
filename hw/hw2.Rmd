@@ -1,0 +1,106 @@
+---
+title: 'Ling 300: Homework 2'
+author: "Instructor: Klinton Bicknell"
+output: html_document
+---
+
+This homework assignment has two parts. The first part tests your understanding of some basic concepts in probability theory and is short answer. The second part requires programming in R, and requires turning in a script you'll create, in addition to answering some short answer questions.
+
+Probability theory
+------------------
+
+*Working with joint probabilities.* For problems 1--3, imagine that a researcher is interested in how the choice to refer to a noun with the definite article 'the' versus the indefinite article 'a' may depend on the formality of the noun. To test this, they're looking in particular at two nouns that differ in formality but have very similar meanings: 'couch' and 'sofa'. Imagine that they used a very large corpus to determine the joint distribution on what each noun phrase containing 'couch'/'sofa' and an article 'a'/'the' will be. Let the variable $A$ represent whether the noun phrase uses 'a' (1) or 'the' (0), and let the variable $C$ represent whether the noun phrase uses 'couch' (1) or 'sofa' (0). For the purposes of these problems, assume that this distribution is perfectly known as the following (ignoring any estimation error or uncertainty):
+
+ \t       | $C = 0$ | $C = 1$
+--------- | ------- | -----------
+$A = 0$   | 0.10    | 0.30
+$A = 1$   | 0.12    | 0.48
+
+1. Calculate the marginal probabilities of saying 'a' $p(A = 1)$ and of saying 'couch' $p(C = 1)$.
+
+2. Calculate the conditional probability of saying 'a' given that the noun is 'couch' $p(A = 1 | C = 1)$.
+
+3. Does noun formality affect determiner use, i.e., are $A$ and $C$ independent? Why or why not?
+
+4. *Chain rule.* Decompose the joint distribution $p(W, X, Y, Z)$ into four component probabilities using the chain rule. (Any factorization into four probabilities is fine.)
+
+*Inference in a simple generative model.* For problems 5--8, imagine that a researcher is investigating what affects a speaker's choice to use the complementizer 'that', for example "He said he left." versus "He said that he left.", which mean basically the same thing. In particular, they are investigating how this relates to the first noun phrase in the relative clause, which might be a pronoun 'He said (he) left.', a proper name 'He said (Herman) left.', or a full noun phrase 'He said (the strange man) left.' Imagine a simple two-variable graphical model that represents the generative process in which a speaker first chooses the type of noun phrase to use $N$, which can take values 'pronoun', 'name', or 'full', and then conditional on $N$, determines the complementizer $C$, which can take values of 'that' or 'null'. (Very simple graphical model: $N$ -> $C$)
+
+The distribution represented by this model is completely specified by the marginal distribution on $N$ 
+
+$p(N =\mbox{pronoun}) = 0.6$  
+$p(N =\mbox{name}) = 0.3$  
+$p(N =\mbox{full}) = 0.1$  
+
+and the conditional distributions on $C$ given $N$
+
+$p(C = \mbox{that}\ |\ N =\mbox{pronoun}) = 0.2$  
+$p(C = \mbox{that}\ |\ N =\mbox{name}) = 0.4$  
+$p(C = \mbox{that}\ |\ N =\mbox{full}) = 0.7$  
+
+5. Calculate the probability, without having observed anything, that a speaker will choose to use a non-pronominal noun phrase (either a name or full).
+
+6. Calculate the probability, without having observed anything, that a speaker will use an overt complementizer 'that' $p(C = \mbox{that})$.
+
+7. Calculate the probability, knowing in advance that a speaker is going to use a pronoun, that they will use a null complementizer $p(C = \mbox{null}\ |\ N =\mbox{pronoun})$.
+
+8. Calculate the probability, knowing in advance that a speaker is going to use a null complementizer, that they will use a pronoun $p(N =\mbox{pronoun}\ |\ C = \mbox{null})$.
+
+Visualization, functions, and conjugate Bayes in R
+--------------------------------------------------
+
+9. *Beta distributions.* As we discussed in class, the Beta distribution is a very widely used conjugate prior for the binomial parameter $\pi$. It's important to have a good intuition for what parameter combinations give the Beta distribution its shapes. The following code defines a function to let us view Beta distributions with `ggplot2`.
+    ```{r}
+    plot_beta <- function(alpha, beta) {
+      dat_dummy <- data.frame(x = seq(0, 1, len = 100))
+      ggplot(dat_dummy, aes(x = x, y = ..y..)) +
+        stat_function(fun = dbeta, args = list(shape1 = alpha, shape2 = beta))
+    }
+    ```
+    Specifically, this function will show the probability density function for a Beta distribution with parameters `shape1` and `shape2` (which correspond to $\alpha$ and $\beta$ we discussed in class). Just paste this function definition into your script, and then you can use it to get a sense of the Beta distribution.
+
+    + Try a range of different $\alpha$ and $\beta$s, where $\alpha = \beta$ and $\alpha > 1$ and $\beta > 1$. Where is the probability for all these distributions peaked? Why does this make sense if we think of $\alpha$ and $\beta$ as pseudocounts? What happens to these distributions as $\alpha$ and $\beta$ increase?
+
+    + Try a range of different $\alpha$ and $\beta$s, where $\alpha = \beta$ and $\alpha < 1$ and $\beta < 1$. Where is the probability for all these distributions peaked? What happens as $\alpha$ and $\beta$ get closer to 1? What happens as $\alpha$ and $\beta$ get closer to 0?
+
+    + Try a range of different $\alpha$ and $\beta$s, where $\alpha = 3\beta$ and $\alpha > 1$ and $\beta > 1$. Where is the probability for all these distributions peaked? Why does this make sense if we think of $\alpha$ and $\beta$ as pseudocounts? What happens to these distributions as $\alpha$ and $\beta$ increase?
+
+    + Try a range of different $\alpha$ and $\beta$s, where $\alpha > 1$ and $\beta < 1$. What do these all look like? What happens as $\alpha$ increases? What happens as $\beta$ decreases?
+
+    + Try a range of different $\alpha$ and $\beta$s, where $\alpha > \beta$ and $\alpha < 1$ and $\beta < 1$. What do these all look like? What happens as $\beta$ decreases? What happens as $\alpha$ decreases?
+
+10. *Summarizing beta distributions: part 1.* In this homework, you'll be performing conjugate inference in a Beta-binomial model, where we'll end up with posterior Beta distributions that we'll want to summarize. Two ways of summarizing distributions that we discussed in class are (a) calculating the distribution's mean and (b) calculating a 95% central probability interval. For this problem, you'll create functions to do both for a Beta distribution.
+
+    Create a function `beta_mean()` that takes as input two parameters `alpha` and `beta`, and returns the mean of the Beta distribution with those parameters. As always, make sure to initially check that the input parameters meet the function's assumptions (that they're both greater than zero, as is required by the Beta distribution.)
+    
+    Recall that the formula for the mean of the Beta distribution is $\dfrac{\alpha}{\alpha + \beta}$. For this function, and all other functions in this homework, make sure to test your function to make sure it returns the right thing, and complains about the input when it should.
+    
+11. *Summarizing beta distributions: part 2.* Create a function `beta_central_interval()` that takes as its first two parameters `alpha` and `beta`, and as its third parameter `size`, the size of the interval expressed as a probability (e.g., 0.90 for a 90% probability interval), and returns a two-element vector representing the endpoints of a central probability interval. Use a default argument of 0.95 for `size`, and make sure your function works whether or not you specify it. The function should check to make sure `alpha` and `beta` satisfy the Beta distribution's requirements (as above) and also ensure that `size` is strictly between 0 and 1 exclusive ($0 < \mbox{size} < 1$).
+    
+    Recall that a 90% central interval can be constructed from a distribution's cumulative distribution function by using the point at which 5 percent of the probability mass is below it as the lower bound and the point at which 5 percent of the proability mass is above it as the upper bound. Note that when doing this, we are essentially inverting the cumulative distribution function, which usually takes as input a point $x$ and outputs the probability mass that is below $x$, to produce a function that takes as input a probability $p$ and outputs the point $x$ at which that much probability mass is below. This inverted function is called the _quantile_ function, and is implemented in R for many common distributions, including the Beta distribution. Specifically, the `qbeta()` function in R takes as input the probability $p$, and the two parameters of the Beta distribution $\alpha$ and $\beta$, but refers to these as `shape1` and `shape2`. Thus, to get the point in a Beta(2, 1) at which 5% of the probability mass is below, one would call `qbeta(0.05, 2, 1)`.
+
+12. *Calculating posterior betas.* Create a function `beta_posterior()` that takes as its first two arguments the number of successes `successes` and the number of failures `failures` that have been observed, and its second two arguments the `alpha` and `beta` parameters of a prior Beta distribution on $\pi$, and returns a two-element vector that represents the $\alpha$ and $\beta$ parameters of a posterior distribution on $\pi$. Use default arguments of 1 for the prior parameters `alpha` and `beta`, and make sure your function works whether or not you specify them. As always, first check your assumptions about the input, ensuring that `alpha` and `beta` are positive, and that `successes` and `failures` are non-negative.
+
+13. *Putting it all together: plotting Beta binomial posteriors.* [Counts double for grading purposes.] At this point, you have a function that can calculate the posterior Beta distribution on $\pi$ given a prior Beta distribution and some observations, and you have two functions that can summarize a Beta distribution by calculating its mean and central probability intervals. Now, you'll put them together to create a function `beta_posterior_summary()` that takes as input (1) a single binary numeric vector of 0s and 1s `x` that represent a series of observations, (2--3) the parameters `alpha` and `beta` of a prior Beta distribution on $\pi$ (both defaulting to 1), and (4) the `size` of a desired central probability interval (defaulting to 0.9), and outputs the mean and relevant central probability interval of a posterior Beta distribution on $\pi$.
+
+    The basic plan for your function should be:
+        
+    a. compute `successes` and `failures` from `x`
+    b. call `beta_posterior` to get the parameters of the posterior Beta
+    c. call `beta_mean` to get the mean of the posterior distribution
+    d. call `beta_central_interval` to get the central interval of the posterior distribution
+    e. convert the mean and central interval into the right format to return
+    
+    Here is some more information about each step:
+    
+    a. To compute the number of successes from the binary numeric vector `x`, note that `sum(x)` will return the sum of all elements in `x`, and `length(x)` will return the total number of elements in `x`.
+    b. When calling `beta_posterior()`, you will of course need to use the `successes` and `failures` variables you just computed in (a), but don't forget to also specify the prior distribution parameters that `beta_posterior_summary()` was called with.
+    c. To call `beta_mean()`, you'll need to pass it the new `alpha` and `beta` parameters that were returned by `beta_posterior()` in (b). Since `beta_posterior()` returns the two parameters just as the elements of a two-dimensional vector, you'll need to extract the new `alpha` and `beta` from this vector. Remember that you can use index notation in square brackets to extract elements from vectors, e.g., `x[1]` is the first element of the vector `x`.
+    d. When calling `beta_central_interval()`, don't forget to pass along the `size` parameter specified to `beta_posterior_summary()`.
+    e. Because we're going to use this function with `ggplot2` in problem 15, its output needs to be in a particular format. Specifically, you should return a one-row data frame with three columns: column `y` should be the posterior mean, column `ymin` should be the lower bound of the central posterior probability interval, and column `ymax` should be the upper bound of the central posterior probability interval. As a reminder example, you can create a data frame with two columns `a` and `b` that are initialized to the vectors `y` and `z` respectively by `data.frame(a = y, b = z)`.
+    
+    Finally, a note about checking the input variables. As I've said in class, it's always a good habit in a function to first quickly check the input variables to ensure these match your assumptions. In this case, the function `beta_posterior_summary()` is immediately calling functions that check all four of its arguments, so you can defer the variable checking to those functions.
+    
+14. Finally, we'll use your new `beta_posterior_summary()` function to re-plot the Schilling data from homework 1. In particular, this time, you should first read in the data (`schilling_ling300.txt`, [download here](schilling_ling300.txt)), and then (using `dplyr`) make `wlen` a factor. This time, there's no need for any of the other processing we did in hw1, because we're not going to aggregate each subject's data, but rather plot the data for individual subjects. Next, using `ggplot2`, plot this new data frame, making a graph where `skip` is the y axis and `wlen` is the x axis, add the `stat_summary` function with the `mean_se` function again, and ensure that the graph does indeed appear. (Note that this check is just to make sure you're on the right track. It's almost never a good idea to actually try to interpret a graph like this, where standard errors are calculated just by lumping all the subject's data together.)
+    + Now, add `+ facet_wrap(~ subj)` to this line of commands. This will now split the graph into 9 panels, one for each subject. Note that in many ways these graphs have some strange properties: most notably, for some word lengths for some subjects, the standard error bars are zero, instead of showing a range, the graph in those cases is a simple point at 0 or 1. The reason for this is that the way that calculating standard errors works is essentially to estimate the uncertainty in an estimate of the parameter $\pi$ by estimating the amount of variability in the data. If all the data for a given subject--length pair have the same value (either 0 or 1), the variability in the data will be zero, and thus, the error bars will be zero too. This happens especially frequently for longer word lengths, which are overall rarer in language, and thus have less data. When there are fewer data points, it's more likely that they could all have the same value. Looking across all the subjects, does it appear that they all show the same effect of word length on skip rate? How do subjects differ from each other?
+    + Finally, add a new plotting command to your script that is the same as the previous plotting command, except substitute your new function `beta_posterior_summary` for `mean_se`. This will tell `ggplot2` to produce the dots and ranges on the graphs corresponding to the output of `beta_posterior_summary`. Compare these two graphs. What happens to the problematic points in the previous graph that had no error bars? Why did this happen? Looking now at the new Bayesian graphs, do any of your answers change about whether it seems that all subjects are showing the same effect of word length on skip rate, or how subjects differ from each other?
