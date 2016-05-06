@@ -1,7 +1,9 @@
 ---
 title: 'Ling 300: Homework 2'
 author: "Instructor: Klinton Bicknell"
-output: html_document
+output:
+  html_document:
+    highlight: pygments
 ---
 
 This homework assignment has two parts. The first part tests your understanding of some basic concepts in probability theory and is short answer. The second part requires programming in R, and requires turning in a script you'll create, in addition to answering some short answer questions.
